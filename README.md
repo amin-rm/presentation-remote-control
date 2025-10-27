@@ -1,5 +1,6 @@
 # Simple 2-Command Remote Control
 
+![alt text](https://github.com/amin-rm/presentation-remote-control/blob/main/screenshot.png)
 This is a simple and easy-to-use 2-button remote for controlling a presentation.
 
 It is designed for students who need a quick solution to control their slides during a project or thesis presentation without needing a specialized remote.
