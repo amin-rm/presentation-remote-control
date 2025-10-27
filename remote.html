@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <title>Slides Remote</title>
+  <style>
+    html,body{height:100%;margin:0;font-family:system-ui,Arial}
+    .wrap{display:flex;flex-direction:column;height:100%}
+    .row{flex:1;display:flex}
+    button{flex:1;font-size:6vw;border:none}
+    #prev{background:#eee}
+    #next{background:#ddd}
+    .hint{padding:.6rem;text-align:center;font-size:14px;color:#666}
+    .secret{display:flex;gap:.5rem;justify-content:center;margin:.5rem}
+    input{font-size:16px;padding:.4rem;width:16rem;max-width:70%}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="row">
+      <button id="prev">◀︎ PREV</button>
+      <button id="next">NEXT ▶︎</button>
+    </div>
+    <div class="secret">
+      <input id="sec" placeholder="Optional secret…" autocomplete="off">
+      <button id="save">Use</button>
+    </div>
+    <div class="hint">Tap buttons • Swipe left/right • Double-tap to toggle full screen</div>
+  </div>
+  <script>
+    const base = location.origin;
+    let secret = localStorage.getItem('remote_secret') || '';
+    const hdrs = ()=> secret ? { 'X-Remote-Secret': secret } : {};
+    const post = (path)=> fetch(base+path,{method:'POST', headers:hdrs()}).catch(()=>{});
+
+    document.getElementById('prev').onclick = ()=> post('/prev');
+    document.getElementById('next').onclick = ()=> post('/next');
+
+    // Swipe
+    let sx=0, sy=0;
+    addEventListener('touchstart', e=>{ const t=e.touches[0]; sx=t.clientX; sy=t.clientY; }, {passive:true});
+    addEventListener('touchend', e=>{
+      const t=e.changedTouches[0], dx=t.clientX - sx, dy=t.clientY - sy;
+      if(Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)){
+        if(dx < 0) post('/next'); else post('/prev');
+      }
+    }, {passive:true});
+
+    // Double-tap to enter/exit fullscreen
+    let lastTap=0;
+    addEventListener('touchend', ()=>{
+      const now=Date.now();
+      if(now-lastTap<300){
+        if(!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+        else document.exitFullscreen?.();
+      }
+      lastTap=now;
+    });
+
+    // Keep screen awake (Wake Lock API where supported)
+    let lock;
+    async function keepAwake(){
+      try{ if ('wakeLock' in navigator) lock = await navigator.wakeLock.request('screen'); }catch{}
+    }
+    keepAwake();
+    document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) keepAwake(); });
+
+    // Secret handling
+    const secInput = document.getElementById('sec');
+    secInput.value = secret;
+    document.getElementById('save').onclick = ()=>{
+      secret = secInput.value.trim();
+      localStorage.setItem('remote_secret', secret);
+    };
+
+    // Keyboard fallback (if opened on a laptop): ←/→
+    addEventListener('keydown', (e)=>{
+      if(e.key === 'ArrowRight') post('/next');
+      if(e.key === 'ArrowLeft') post('/prev');
+    });
+  </script>
+</body>
+</html>
