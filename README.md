@@ -65,7 +65,3 @@ When accessing the remote page, enter the same secret in the input field before 
 - Check that the IP address is correct.
 - Ensure port 5000 is open in the firewall settings.
 - If nothing happens when pressing the buttons, verify the server is still running.
-
-## License
-
-This project is released under the MIT License.
